@@ -279,6 +279,7 @@ for i in range(int(page)):
             }
 
         container_comment = pd.concat([container_comment,pd.DataFrame(commDic)], axis=0)
+        time.sleep(random.randint(20,150)) # 休息久一點
         
     dic = {
             '商品ID':itemid,
