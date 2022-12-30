@@ -24,12 +24,15 @@ import re
 import random
 import zlib
 
-keyword = '運動內衣'
-page = 100
+keyword = '花襯衫'
+page = 3
 ecode = 'utf-8-sig'
 
 # 2022/11/21 由於蝦皮API更新，商品細節資料無法再單純使用request爬取，因此header只留給爬留言使用，而流言的API沒什麼檢查
-my_headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36',}     
+my_headers = {
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36',
+    'if-none-match-': '55b03-6d83b58414a54cb5ffbe81099940f836'
+    }     
 # 進入每個商品，抓取買家留言
 def goods_comments(item_id, shop_id):
     url = 'https://shopee.tw/api/v4/item/get_ratings?filter=0&flag=1&itemid='+ str(item_id) + '&limit=50&offset=0&shopid=' + str(shop_id) + '&type=0'
@@ -328,4 +331,4 @@ minute = totalTime // 60
 second = totalTime % 60
 print('資料儲存完成，花費時間（約）： ' + str(minute) + ' 分 ' + str(second) + '秒')
 
-driver.close()
+driver.close() 
