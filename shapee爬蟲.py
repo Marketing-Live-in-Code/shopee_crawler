@@ -11,6 +11,7 @@ shapee爬蟲
 2022/09/17 selenium將套件更新到4.4.3版本，因此寫法全部都更新過
 2022/12/29 蝦皮API加入防爬蟲機制，因此改用seleniumwire撈取封包進行爬取
 2023/4/20 因蝦皮要求強制登入，且防爬蟲機制越來越嚴格，因此大修整個爬蟲的邏輯與模式
+2023/5/12 發現爬留言的部分忘了加上休息，很容易被ben掉
 """
 
 import requests
@@ -326,6 +327,7 @@ for i in range(len(getData)):
 
     container_comment = pd.concat([container_comment,pd.DataFrame(commDic)], axis=0)
     container_comment.to_csv(keyword +'_留言資料.csv', encoding = ecode, index=False)
+    time.sleep(random.randint(45,70)) # 休息久一點
 
 tEnd = time.time()#計時結束
 totalTime = int(tEnd - tStart)
