@@ -11,7 +11,7 @@ shapee爬蟲
 2022/09/17 selenium將套件更新到4.4.3版本，因此寫法全部都更新過
 2022/12/29 蝦皮API加入防爬蟲機制，因此改用seleniumwire撈取封包進行爬取
 2023/4/20 因蝦皮要求強制登入，且防爬蟲機制越來越嚴格，因此大修整個爬蟲的邏輯與模式
-2023/5/12 發現爬留言的部分忘了加上休息，很容易被ben掉
+2023/05/16 發現爬取留言的設計有問題，沒又正確抓取商品資料，且有許多變數沒有設定
 """
 
 import requests
@@ -61,11 +61,14 @@ def goods_detail(url, item_id, shop_id):
             # 挑出商品詳細資料的json封包
             if 'https://shopee.tw/api/v4/item/get?itemid=' + str(item_id) + '&shopid=' + str(shop_id) in request.url:
                 # 此封包是有壓縮的，因此需要解壓縮
-                getPacket = zlib.decompress(
-                    request.response.body,
-                    16+zlib.MAX_WBITS
-                    )
-                break
+                try:
+                    getPacket = zlib.decompress(
+                        request.response.body,
+                        16+zlib.MAX_WBITS
+                        )
+                    break
+                except:
+                    print('封包拆解有誤')
     if getPacket != '':
         gj=json.loads(getPacket)
         return gj['data']
@@ -80,7 +83,7 @@ options = webdriver.ChromeOptions()
 prefs = {"profile.default_content_setting_values.notifications" : 2}
 options.add_experimental_option("prefs",prefs)
 # 不載入圖片，提升爬蟲速度
-options.add_argument('blink-settings=imagesEnabled=false') 
+# options.add_argument('blink-settings=imagesEnabled=false') 
 
 # 開啟瀏覽器
 driver = webdriver.Chrome(service=service, chrome_options=options)
@@ -202,6 +205,11 @@ print('資料儲存完成，花費時間（約）： ' + str(minute) + ' 分 ' +
 
 
 
+
+
+
+
+
 #---------- Part 2. 補上商品的詳細資料，由於多設了爬取的標記，因此爬過的就不會再爬了 ----------
 print('---------- 開始進行爬蟲 ----------')
 tStart = time.time()#計時開始
@@ -275,11 +283,21 @@ print('資料儲存完成，花費時間（約）： ' + str(minute) + ' 分 ' +
 print('---------- 開始進行爬蟲 ----------')
 tStart = time.time()#計時開始
 container_comment = pd.DataFrame()
-getData = pd.read_csv(keyword +'_留言資料.csv')
-for i in range(len(getData)):
+# 2023/05/16 先取得之前爬下來的紀錄
+getData = pd.read_csv(keyword +'_商品資料.csv')
+for i in tqdm(range(len(getData))):
     
-    # 消費者評論詳細資料
+    # 2023/05/16 消費者評論詳細資料
+    theitemid = getData.iloc[i]['商品ID']
+    theshopid = getData.iloc[i]['賣家ID']
+    getname = getData.iloc[i]['商品名稱']
+    theprice = getData.iloc[i]['價格']
     iteComment = goods_comments(item_id = theitemid, shop_id = theshopid)
+    
+    # 2023/5/16，抓不到資料就先跳過
+    if iteComment == None:
+        continue
+
     userid = [] #使用者ID
     anonymous = [] #是否匿名
     commentTime = [] #留言時間
@@ -327,13 +345,23 @@ for i in range(len(getData)):
 
     container_comment = pd.concat([container_comment,pd.DataFrame(commDic)], axis=0)
     container_comment.to_csv(keyword +'_留言資料.csv', encoding = ecode, index=False)
-    time.sleep(random.randint(45,70)) # 休息久一點
+
+    time.sleep(random.randint(35,60)) # 休息久一點
 
 tEnd = time.time()#計時結束
 totalTime = int(tEnd - tStart)
 minute = totalTime // 60
 second = totalTime % 60
 print('資料儲存完成，花費時間（約）： ' + str(minute) + ' 分 ' + str(second) + '秒')
+
+
+
+
+
+
+
+
+
 
 
 driver.close() 
